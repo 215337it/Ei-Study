@@ -1,5 +1,8 @@
 package com.smarthome.devices;
 
+import com.smarthome.DeviceManager;
+import com.smarthome.scheduler.TaskScheduler;
+
 public class DoorLock extends SmartDevice {
     private boolean isLocked;
     
@@ -9,6 +12,9 @@ public class DoorLock extends SmartDevice {
         this.isLocked = status;
        
     }
+    public boolean isLocked() {
+        return isLocked;
+    }
     
     @Override
     public void turnOn() {
@@ -17,6 +23,7 @@ public class DoorLock extends SmartDevice {
         setStatus("locked");
         
         System.out.println(getName() + " is now LOCKED.");
+        TaskScheduler.getInstance(DeviceManager.getInstance()).evaluateAllTriggers();
     }
 
     @Override
@@ -25,6 +32,7 @@ public class DoorLock extends SmartDevice {
         setStatus("unlocked");
         
         System.out.println(getName() + " is now UNLOCKED.");
+        TaskScheduler.getInstance(DeviceManager.getInstance()).evaluateAllTriggers();
     }
 
     @Override

@@ -169,7 +169,7 @@ public class CommandLineInterface {
                 System.out.print("Enter time (yyyy-MM-dd HH:mm): ");
                 String timeString = scanner.nextLine().trim();
                 LocalDateTime time = LocalDateTime.parse(timeString, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
-                manager.scheduleTask(id, time, command);
+                scheduler.scheduleTask(id, time, command);
                 System.out.println("Task scheduled.");
             } else {
                 throw new DeviceNotFoundException("Device with ID " + id + " not found.");
@@ -197,12 +197,16 @@ public class CommandLineInterface {
     }
     private void addTrigger() {
         try {
-            System.out.print("Enter condition (e.g., temperature > 75): ");
+            System.out.print("Enter condition (e.g., temperature > 75 / doorlock = open/close ): ");
             String condition = scanner.nextLine().trim();
-            System.out.print("Enter action (e.g., turnOff(1)): ");
+            System.out.print("Enter action (e.g., turnoff/turnon): ");
             String action = scanner.nextLine().trim();
-            scheduler.addTrigger(new Trigger(condition, action));
+            System.out.print("Enter device id to perform action: ");
+            int id = Integer.parseInt(scanner.nextLine().trim());
+            
+            scheduler.addTrigger(new Trigger(condition, action, id));
             System.out.println("Trigger added.");
+            
         } catch (Exception e) {
             Logger.logError("Error adding trigger: " + e.getMessage());
             System.out.println("Error adding trigger.");

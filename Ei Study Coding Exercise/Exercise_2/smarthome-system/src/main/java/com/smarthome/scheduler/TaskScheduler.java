@@ -1,5 +1,6 @@
 package com.smarthome.scheduler;
 
+import com.smarthome.devices.DoorLock;
 import com.smarthome.devices.SmartDevice;
 import com.smarthome.devices.Thermostat;
 import com.smarthome.DeviceManager;
@@ -23,8 +24,9 @@ public class TaskScheduler {
     public TaskScheduler(DeviceManager deviceManager) {
         this.deviceManager = deviceManager;
         instance = this;
-        //startScheduler();
+        startScheduler();
     }
+    
     
 
     
@@ -43,7 +45,7 @@ public class TaskScheduler {
     public void addTrigger(Trigger trigger) {
         triggers.add(trigger);
         evaluateAllTriggers();
-        //startScheduler();
+        
 
     }
 
@@ -65,15 +67,9 @@ public class TaskScheduler {
                         }
                     }
                 }
-               // System.out.println("Starting scheduler...");
+             
                 scheduledTasks.removeAll(executedTasks);
-               // evaluateAllTriggers();
-
-                // Stop the scheduler if there are no scheduled tasks or triggers
-                // if (scheduledTasks.isEmpty() && triggers.isEmpty()) {
-                //     Logger.log("No more scheduled tasks or triggers. Stopping scheduler.");
-                //     cancel();
-                // }
+               
             }
         }, 0, 1000); // Check every second
     }
@@ -95,10 +91,11 @@ public class TaskScheduler {
         String[] parts = trigger.getCondition().split(" ");
         if (parts.length == 3) {
             String operator = parts[1];
-            int value = Integer.parseInt(parts[2]);
+           
 
             for (SmartDevice device : deviceManager.getDevices()) {
                 if (device instanceof Thermostat) {
+                    int value = Integer.parseInt(parts[2]);
                     int currentTemp = ((Thermostat) device).getTemperature();
                     //System.out.println("Current temperature: " + currentTemp);
                     boolean conditionMet = false;
@@ -115,29 +112,50 @@ public class TaskScheduler {
 
                     if (conditionMet) {
                         try {
-                            executeAction(trigger.getAction());
+                            executeAction(trigger.getAction(),trigger.getId());
                         } catch (DeviceNotFoundException e) {
                             Logger.logError(e.getMessage());
                         }
                     }
                 }
+                else if(device instanceof DoorLock){
+                    boolean isLocked=((DoorLock) device).isLocked();
+                   
+                    boolean currentcondition;
+                    if(parts[2].equals("open")){
+                         currentcondition=false;
+                    }
+                    else if(parts[2].equals("close")){
+                         currentcondition=true;
+                    }
+                    
+                        else {
+                            throw new IllegalArgumentException("Invalid condition: " + parts[2]);
+                        }
+                    
+                   
+                    if(isLocked==currentcondition){
+                        try {
+                            executeAction(trigger.getAction(),trigger.getId());
+                        } catch (DeviceNotFoundException e) {
+                            Logger.logError(e.getMessage());
+                        }
+                    }
+                    
+                }
             }
-        }
+       }
     }
 
-    private void executeAction(String action) throws DeviceNotFoundException {
-        if (action.startsWith("turnOff(") && action.endsWith(")")) {
-            int id = Integer.parseInt(action.substring(8, action.length() - 1));
-            if (!isValidDeviceId(id)) {
-                throw new DeviceNotFoundException("Device ID " + id + " not found.");
-            }
-            executeTask(id, "turnOff");
-        } else if (action.startsWith("turnOn(") && action.endsWith(")")) {
-            int id = Integer.parseInt(action.substring(7, action.length() - 1));
-            if (!isValidDeviceId(id)) {
-                throw new DeviceNotFoundException("Device ID " + id + " not found.");
-            }
-            executeTask(id, "turnOn");
+    private void executeAction(String action,int id) throws DeviceNotFoundException {
+        String command=action.toLowerCase();
+        
+        if(command.equals("turnon")||command.equals("turnoff")){
+            
+            executeTask(id,command);
+        }
+        else{
+            Logger.logError("Unknown action: " + action);
         }
         
     }
@@ -184,7 +202,5 @@ public class TaskScheduler {
         }
     }
 
-    private boolean isValidDeviceId(int id) {
-        return true; 
-    }
+    
 }
