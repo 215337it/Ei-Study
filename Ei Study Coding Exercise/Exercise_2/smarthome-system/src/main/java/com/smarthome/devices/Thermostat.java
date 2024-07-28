@@ -20,7 +20,8 @@ public class Thermostat extends SmartDevice {
     public void setTemperature(int temp) {
         this.temperature = temp;
         System.out.println(getName() + " is now set to " + temperature + " degrees.");
-        System.out.println("calling TaskScheduler...");
+        //System.out.println("calling TaskScheduler...");
+        //TaskScheduler.getInstance(DeviceManager.getInstance()).startScheduler();
         TaskScheduler.getInstance(DeviceManager.getInstance()).evaluateAllTriggers();
     }
 

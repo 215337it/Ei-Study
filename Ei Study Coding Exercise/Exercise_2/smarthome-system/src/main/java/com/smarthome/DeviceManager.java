@@ -32,7 +32,7 @@ public class DeviceManager {
         devices = new ArrayList<>();
         this.scheduledTasks = new ArrayList<>();
         this.timer = new Timer(true);
-         startScheduler();
+        startScheduler();
     }
 
     public static synchronized DeviceManager getInstance() {

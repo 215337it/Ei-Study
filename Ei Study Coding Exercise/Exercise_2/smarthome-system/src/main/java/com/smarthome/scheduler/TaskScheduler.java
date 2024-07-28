@@ -18,6 +18,7 @@ public class TaskScheduler {
     private final Timer timer = new Timer();
     private final DeviceManager deviceManager;
     private static TaskScheduler instance;
+    boolean excuted=false;
 
     public TaskScheduler(DeviceManager deviceManager) {
         this.deviceManager = deviceManager;
@@ -64,15 +65,15 @@ public class TaskScheduler {
                         }
                     }
                 }
-                System.out.println("Starting scheduler...");
+               // System.out.println("Starting scheduler...");
                 scheduledTasks.removeAll(executedTasks);
-                evaluateAllTriggers();
+               // evaluateAllTriggers();
 
                 // Stop the scheduler if there are no scheduled tasks or triggers
-                if (scheduledTasks.isEmpty() && triggers.isEmpty()) {
-                    Logger.log("No more scheduled tasks or triggers. Stopping scheduler.");
-                    cancel();
-                }
+                // if (scheduledTasks.isEmpty() && triggers.isEmpty()) {
+                //     Logger.log("No more scheduled tasks or triggers. Stopping scheduler.");
+                //     cancel();
+                // }
             }
         }, 0, 1000); // Check every second
     }
@@ -81,7 +82,11 @@ public class TaskScheduler {
         List<Trigger> executedTriggers = new ArrayList<>();
         for (Trigger trigger : triggers) {
             evaluateTrigger(trigger);
-            executedTriggers.add(trigger);
+            if(excuted){
+                executedTriggers.add(trigger);
+                excuted=false;
+            }
+            
         }
         triggers.removeAll(executedTriggers);
     }
@@ -95,7 +100,7 @@ public class TaskScheduler {
             for (SmartDevice device : deviceManager.getDevices()) {
                 if (device instanceof Thermostat) {
                     int currentTemp = ((Thermostat) device).getTemperature();
-                    System.out.println("Current temperature: " + currentTemp);
+                    //System.out.println("Current temperature: " + currentTemp);
                     boolean conditionMet = false;
 
                     switch (operator) {
@@ -167,10 +172,12 @@ public class TaskScheduler {
             case "turnon":
                 System.out.println("\n" + "Notification");
                 device.turnOn();
+                excuted=true;
                 break;
             case "turnoff":
                 System.out.println("\n" + "Notification");
                 device.turnOff();
+                excuted=true;
                 break;
             default:
                 Logger.logError("Unknown command: " + command);
