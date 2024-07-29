@@ -1,17 +1,17 @@
 package com.smarthome.scheduler;
 
-import com.smarthome.devices.DoorLock;
-import com.smarthome.devices.SmartDevice;
-import com.smarthome.devices.Thermostat;
-import com.smarthome.DeviceManager;
-import com.smarthome.logging.Logger;
-import com.smarthome.exceptions.DeviceNotFoundException;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.smarthome.DeviceManager;
+import com.smarthome.devices.DoorLock;
+import com.smarthome.devices.SmartDevice;
+import com.smarthome.devices.Thermostat;
+import com.smarthome.exceptions.DeviceNotFoundException;
+import com.smarthome.logging.Logger;
 
 public class TaskScheduler {
     private final List<ScheduledTask> scheduledTasks = new ArrayList<>();
@@ -91,8 +91,8 @@ public class TaskScheduler {
         String[] parts = trigger.getCondition().split(" ");
         if (parts.length == 3) {
             String operator = parts[1];
-           
-
+            String name =parts[0];
+            if("temperature".equals(name)){
             for (SmartDevice device : deviceManager.getDevices()) {
                 if (device instanceof Thermostat) {
                     int value = Integer.parseInt(parts[2]);
@@ -117,8 +117,10 @@ public class TaskScheduler {
                             Logger.logError(e.getMessage());
                         }
                     }
-                }
-                else if(device instanceof DoorLock){
+                }}}
+                else if("doorlock".equals(name)){
+                for (SmartDevice device : deviceManager.getDevices()) {
+                 if(device instanceof DoorLock){
                     boolean isLocked=((DoorLock) device).isLocked();
                    
                     boolean currentcondition;
@@ -142,6 +144,7 @@ public class TaskScheduler {
                         }
                     }
                     
+                }
                 }
             }
        }
