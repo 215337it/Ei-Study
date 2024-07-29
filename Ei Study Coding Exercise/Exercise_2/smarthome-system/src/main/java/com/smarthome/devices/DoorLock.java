@@ -8,7 +8,7 @@ public class DoorLock extends SmartDevice {
     
 
     public DoorLock(int id, String name, boolean status) {
-        super(id, name, status ? "locked" : "unlocked");    
+        super(id, name, status ? "locked" : "unlocked", "doorlock");    
         this.isLocked = status;
        
     }

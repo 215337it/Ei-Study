@@ -19,17 +19,14 @@ public class TaskScheduler {
     private final Timer timer = new Timer();
     private final DeviceManager deviceManager;
     private static TaskScheduler instance;
-    boolean excuted=false;
+    boolean excuted = false;
 
     public TaskScheduler(DeviceManager deviceManager) {
         this.deviceManager = deviceManager;
         instance = this;
         startScheduler();
     }
-    
-    
 
-    
     public static synchronized TaskScheduler getInstance(DeviceManager deviceManager) {
         if (instance == null) {
             instance = new TaskScheduler(deviceManager);
@@ -45,16 +42,15 @@ public class TaskScheduler {
     public void addTrigger(Trigger trigger) {
         triggers.add(trigger);
         evaluateAllTriggers();
-        
 
     }
 
     public void startScheduler() {
-        
+
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                
+
                 LocalDateTime now = LocalDateTime.now();
                 List<ScheduledTask> executedTasks = new ArrayList<>();
                 for (ScheduledTask task : scheduledTasks) {
@@ -67,9 +63,9 @@ public class TaskScheduler {
                         }
                     }
                 }
-             
+
                 scheduledTasks.removeAll(executedTasks);
-               
+
             }
         }, 0, 1000); // Check every second
     }
@@ -78,11 +74,11 @@ public class TaskScheduler {
         List<Trigger> executedTriggers = new ArrayList<>();
         for (Trigger trigger : triggers) {
             evaluateTrigger(trigger);
-            if(excuted){
+            if (excuted) {
                 executedTriggers.add(trigger);
-                excuted=false;
+                excuted = false;
             }
-            
+
         }
         triggers.removeAll(executedTriggers);
     }
@@ -91,119 +87,131 @@ public class TaskScheduler {
         String[] parts = trigger.getCondition().split(" ");
         if (parts.length == 3) {
             String operator = parts[1];
-            String name =parts[0];
-            if("temperature".equals(name)){
-            for (SmartDevice device : deviceManager.getDevices()) {
-                if (device instanceof Thermostat) {
-                    int value = Integer.parseInt(parts[2]);
-                    int currentTemp = ((Thermostat) device).getTemperature();
-                    //System.out.println("Current temperature: " + currentTemp);
-                    boolean conditionMet = false;
+            String name = parts[0];
+            if ("temperature".equals(name)) {
+                String checkstr = deviceManager.getDeviceType(trigger.getId());
+                if (checkstr.equals("thermostat")) {
+                    triggers.remove(trigger);
+                    throw new IllegalArgumentException("Invalid device type for trigger: " + checkstr);
 
-                    switch (operator) {
-                        case ">":
-                            conditionMet = currentTemp > value;
-                            break;
-                        case "<":
-                            conditionMet = currentTemp < value;
-                            break;
-                        
-                    }
+                }
 
-                    if (conditionMet) {
-                        try {
-                            executeAction(trigger.getAction(),trigger.getId());
-                        } catch (DeviceNotFoundException e) {
-                            Logger.logError(e.getMessage());
+                for (SmartDevice device : deviceManager.getDevices()) {
+                    if (device instanceof Thermostat) {
+                        int value = Integer.parseInt(parts[2]);
+                        int currentTemp = ((Thermostat) device).getTemperature();
+                        // System.out.println("Current temperature: " + currentTemp);
+                        boolean conditionMet = false;
+
+                        switch (operator) {
+                            case ">":
+                                conditionMet = currentTemp > value;
+                                break;
+                            case "<":
+                                conditionMet = currentTemp < value;
+                                break;
+
+                        }
+
+                        if (conditionMet) {
+                            try {
+                                executeAction(trigger.getAction(), trigger.getId());
+                            } catch (DeviceNotFoundException e) {
+                                Logger.logError(e.getMessage());
+                            }
                         }
                     }
-                }}}
-                else if("doorlock".equals(name)){
+                }
+            } else if ("doorlock".equals(name)) {
+                String checkstr = deviceManager.getDeviceType(trigger.getId());
+                if (checkstr.equals("doorlock")) {
+                    triggers.remove(trigger);
+                    throw new IllegalArgumentException("Invalid device type for trigger: " + checkstr);
+
+                }
                 for (SmartDevice device : deviceManager.getDevices()) {
-                 if(device instanceof DoorLock){
-                    boolean isLocked=((DoorLock) device).isLocked();
-                   
-                    boolean currentcondition;
-                    if(parts[2].equals("open")){
-                         currentcondition=false;
-                    }
-                    else if(parts[2].equals("close")){
-                         currentcondition=true;
-                    }
-                    
+                    if (device instanceof DoorLock) {
+                        boolean isLocked = ((DoorLock) device).isLocked();
+
+                        boolean currentcondition;
+                        if (parts[2].equals("open")) {
+                            currentcondition = false;
+                        } else if (parts[2].equals("close")) {
+                            currentcondition = true;
+                        }
+
                         else {
                             throw new IllegalArgumentException("Invalid condition: " + parts[2]);
                         }
-                    
-                   
-                    if(isLocked==currentcondition){
-                        try {
-                            executeAction(trigger.getAction(),trigger.getId());
-                        } catch (DeviceNotFoundException e) {
-                            Logger.logError(e.getMessage());
+
+                        if (isLocked == currentcondition) {
+                            try {
+                                executeAction(trigger.getAction(), trigger.getId());
+                            } catch (DeviceNotFoundException e) {
+                                Logger.logError(e.getMessage());
+                            }
                         }
+
                     }
-                    
-                }
                 }
             }
-       }
+        }
     }
 
-    private void executeAction(String action,int id) throws DeviceNotFoundException {
-        String command=action.toLowerCase();
-        
-        if(command.equals("turnon")||command.equals("turnoff")){
-            
-            executeTask(id,command);
-        }
-        else{
+    private void executeAction(String action, int id) throws DeviceNotFoundException {
+        String command = action.toLowerCase();
+
+        if (command.equals("turnon") || command.equals("turnoff")) {
+
+            executeTask(id, command);
+        } else {
             Logger.logError("Unknown action: " + action);
         }
-        
+
     }
+
     private void executeTask(ScheduledTask task) throws DeviceNotFoundException {
-               
-                SmartDevice device = deviceManager.getDevice(task.getDeviceId());
-                if (device == null) {
-                    throw new DeviceNotFoundException("Device with ID " + task.getDeviceId() + " not found.");
-                }
-                switch (task.getCommand().toLowerCase()) {
-                    case "turnon":
-                        System.out.println("\n"+"Notification");
-                        device.turnOn();
-                        
-                        break;
-                    case "turnoff":
-                        System.out.println("\n"+"Notification");
-                        device.turnOff();
-                       
-                        break;
-                    default:
-                        Logger.logError("Unknown command: " + task.getCommand());
-                }
-            }
+
+        SmartDevice device = deviceManager.getDevice(task.getDeviceId());
+        if (device == null) {
+            throw new DeviceNotFoundException("Device with ID " + task.getDeviceId() + " not found.");
+        }
+        switch (task.getCommand().toLowerCase()) {
+            case "turnon":
+                System.out.println("\n" + "Notification");
+                device.turnOn();
+
+                break;
+            case "turnoff":
+                System.out.println("\n" + "Notification");
+                device.turnOff();
+
+                break;
+            default:
+                Logger.logError("Unknown command: " + task.getCommand());
+        }
+    }
 
     private void executeTask(int id, String command) throws DeviceNotFoundException {
         SmartDevice device = deviceManager.getDevice(id);
         if (device == null) {
             throw new DeviceNotFoundException("Device with ID " + id + " not found.");
+            
         }
         switch (command.toLowerCase()) {
             case "turnon":
                 System.out.println("\n" + "Notification");
                 device.turnOn();
-                excuted=true;
+                excuted = true;
                 break;
             case "turnoff":
                 System.out.println("\n" + "Notification");
                 device.turnOff();
-                excuted=true;
+                excuted = true;
                 break;
             default:
                 Logger.logError("Unknown command: " + command);
         }
     }
 
-    
 }

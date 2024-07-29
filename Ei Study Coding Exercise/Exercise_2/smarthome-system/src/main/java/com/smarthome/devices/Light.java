@@ -5,7 +5,7 @@ public class Light extends SmartDevice {
      
 
     public Light(int id, String name,boolean status) {
-        super(id, name,check(status));
+        super(id, name,check(status), "light");
         this.isOn = status;
         
     }

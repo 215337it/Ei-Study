@@ -66,6 +66,13 @@ public class DeviceManager {
                 .findFirst()
                 .orElse(null);
     }
+    public String getDeviceType(int deviceId) {
+        SmartDevice device = getDevice(deviceId);
+        if (device != null) {
+            return device.getType();
+        }
+        return null; // or throw an exception if the device is not found
+    }
 
     public void listDevices() {
         devices.forEach(device -> System.out.println(device));

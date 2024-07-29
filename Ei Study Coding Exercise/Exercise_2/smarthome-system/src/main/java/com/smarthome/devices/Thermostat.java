@@ -10,7 +10,7 @@ public class Thermostat extends SmartDevice {
 
 
     public Thermostat(int id, String name, boolean status) {
-        super(id, name, check(status));
+        super(id, name, check(status), "thermostat");
     }
     
     static String check(boolean isOn) {
@@ -23,6 +23,7 @@ public class Thermostat extends SmartDevice {
         
         TaskScheduler.getInstance(DeviceManager.getInstance()).evaluateAllTriggers();
     }
+    
 
     public int getTemperature() {
         return temperature;

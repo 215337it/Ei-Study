@@ -4,15 +4,18 @@ public abstract class SmartDevice {
     private int id;
     private String name;
     private String status;
+    private String type;
+    
 
-    public SmartDevice(int id, String name, String status) {
+    public SmartDevice(int id, String name, String status, String type) {
         this.id = id;
         this.name = name;
         this.status=status;
+        this.type = type;
     }
-    public SmartDevice(int id, String name) {
-        this(id, name, "off"); 
-    }
+    // public SmartDevice(int id, String name) {
+    //     this(id, name, "off"); 
+    // }
     public void setStatus(String status) {
         this.status = status;
     }
@@ -23,6 +26,9 @@ public abstract class SmartDevice {
 
     public String getName() {
         return name;
+    }
+    public String getType() {
+        return type;
     }
     public String getStatus() {
         return status;
@@ -38,8 +44,9 @@ public abstract class SmartDevice {
     public String toString() {
         return "Device{" +
                 "id=" + id +
-                ", name='" + name+
+                ", name='" + name+'\'' +
                 ", status='" + status + '\'' +
+                ", type='" + type + '\'' +
                 '}';
     }
 }
