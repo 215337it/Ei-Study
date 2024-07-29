@@ -1,22 +1,23 @@
 package com.smarthome;
 
-import com.smarthome.devices.SmartDevice;
-import com.smarthome.devices.Thermostat;
-import com.smarthome.logging.Logger;
-import com.smarthome.scheduler.TaskScheduler;
-import com.smarthome.scheduler.Trigger;
-import com.smarthome.exceptions.DeviceNotFoundException;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
+import com.smarthome.devices.SmartDevice;
+import com.smarthome.devices.Thermostat;
+import com.smarthome.exceptions.DeviceNotFoundException;
+import com.smarthome.logging.Logger;
+import com.smarthome.scheduler.TaskScheduler;
+import com.smarthome.scheduler.Trigger;
+
 public class CommandLineInterface {
+
     private DeviceManager manager;
     private Scanner scanner;
     private final TaskScheduler scheduler;
 
-    public CommandLineInterface(DeviceManager manager,TaskScheduler scheduler) {
+    public CommandLineInterface(DeviceManager manager, TaskScheduler scheduler) {
         this.manager = manager;
         this.scheduler = scheduler;
         this.scanner = new Scanner(System.in);
@@ -24,30 +25,34 @@ public class CommandLineInterface {
 
     public void run() {
         Logger.log("Smart Home System started.");
-        boolean continueRunning = true;
+        showMenuAndHandleChoice();
+    }
 
-        while (continueRunning) {
-            try {
-                showMenu();
-                int choice = Integer.parseInt(scanner.nextLine().trim());
+    private void showMenuAndHandleChoice() {
+        try {
+            showMenu();
+            int choice = Integer.parseInt(scanner.nextLine().trim());
 
-                if (choice == 7) {
-                    Logger.log("Exiting Smart Home System.");
-                    continueRunning = false; // Exit the loop
-                } else {
-                    handleUserChoice(choice);
-                }
-
-            } catch (NumberFormatException e) {
-                Logger.logError("Invalid input format: " + e.getMessage());
-                System.out.println("Please enter a valid number.");
-            } catch (Exception e) {
-                Logger.logError("An unexpected error occurred: " + e.getMessage());
-                System.out.println("An error occurred. Please try again.");
+            if (choice == 7) {
+                Logger.log("Exiting Smart Home System.");
+                System.exit(0); // End the recursion
+            } else {
+                handleUserChoice(choice);
+                showMenuAndHandleChoice(); // Recursive call to show the menu again
             }
+
+        } catch (NumberFormatException e) {
+            Logger.logError("Invalid input format: " + e.getMessage());
+            System.out.println("Please enter a valid number.");
+            showMenuAndHandleChoice(); // Recursive call to prompt the user again
+        } catch (Exception e) {
+            Logger.logError("An unexpected error occurred: " + e.getMessage());
+            System.out.println("An error occurred. Please try again.");
+            showMenuAndHandleChoice(); // Recursive call to prompt the user again
         }
     }
 
+   
     private void showMenu() {
         System.out.println("\n1. Add Device");
         System.out.println("2. Remove Device");
@@ -137,13 +142,13 @@ public class CommandLineInterface {
                         break;
                     //if(device instanceof Thermostat){
                     case 4:
-                    if (device instanceof Thermostat) {
-                        System.out.print("Enter temperature: ");
-                        int temp = Integer.parseInt(scanner.nextLine().trim());
-                        ((Thermostat) device).setTemperature(temp);
-                    }
-                    break;
-                     //}
+                        if (device instanceof Thermostat) {
+                            System.out.print("Enter temperature: ");
+                            int temp = Integer.parseInt(scanner.nextLine().trim());
+                            ((Thermostat) device).setTemperature(temp);
+                        }
+                        break;
+                    //}
                     default:
                         System.out.println("Invalid choice.");
                 }
@@ -158,6 +163,7 @@ public class CommandLineInterface {
             System.out.println(e.getMessage());
         }
     }
+
     private void scheduleTask() {
         try {
             System.out.print("Enter device ID to schedule: ");
@@ -190,11 +196,12 @@ public class CommandLineInterface {
         System.out.println("1. Turn On");
         System.out.println("2. Turn Off");
         System.out.println("3. Status");
-        if(device instanceof Thermostat){
-            System.out.println("4. Set Temperature");    
+        if (device instanceof Thermostat) {
+            System.out.println("4. Set Temperature");
         }
         System.out.print("Enter your choice: ");
     }
+
     private void addTrigger() {
         try {
             System.out.print("Enter condition (e.g., temperature > 75 / doorlock = open/close ): ");
@@ -203,10 +210,10 @@ public class CommandLineInterface {
             String action = scanner.nextLine().trim();
             System.out.print("Enter device id to perform action: ");
             int id = Integer.parseInt(scanner.nextLine().trim());
-            
+
             scheduler.addTrigger(new Trigger(condition, action, id));
             System.out.println("Trigger added.");
-            
+
         } catch (Exception e) {
             Logger.logError("Error adding trigger: " + e.getMessage());
             System.out.println("Error adding trigger.");
